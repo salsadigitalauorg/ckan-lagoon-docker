@@ -1,0 +1,2 @@
+ARG PYTHON_VERSION
+FROM amazeeio/python:${PYTHON_VERSION:-3.7}
