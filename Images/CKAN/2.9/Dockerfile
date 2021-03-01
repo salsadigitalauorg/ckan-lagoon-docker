@@ -1,8 +1,9 @@
-FROM amazeeio/python:3.7
+FROM amazeeio/python:3.8
 
 RUN apk update \
     && apk upgrade \
-    && apk add --no-cache python3-dev \
+    && apk add --no-cache \
+    python3-dev \
     git \
     libpq \
     py3-virtualenv \
@@ -26,12 +27,12 @@ RUN python3 -m venv /app/ckan/default \
 
 # Set CKAN version to build
 ENV GIT_URL=https://github.com/ckan/ckan.git
-ENV GIT_BRANCH=ckan-2.9.0
+ENV GIT_BRANCH=ckan-2.9.2
 
 RUN . /app/ckan/default/bin/activate \
 	&& cd /app/ckan/default/src/ \
 	&& pip install -e git+${GIT_URL}@${GIT_BRANCH}#egg=ckan \
-	&& pip install -r '/app/ckan/default/src/ckan/requirements.txt' \
+	&& pip install -r /app/ckan/default/src/ckan/requirements.txt \
 	&& ln -s /app/ckan/default/src/ckan/who.ini /app/ckan/default/who.ini \
 	&& deactivate
 
