@@ -18,6 +18,7 @@ RUN apk update \
 
 RUN mkdir -p /app/ckan/default \
     && mkdir -p /app/ckan/default/src/ \
+    && mkdir -p /app/src \
     && fix-permissions /app/ckan/default
 
 RUN python3 -m venv /app/ckan/default \
