@@ -28,7 +28,7 @@ RUN python3 -m venv /app/ckan/default \
 
 # Set CKAN version to build
 ENV GIT_URL=https://github.com/ckan/ckan.git
-ENV GIT_BRANCH=ckan-2.9.2
+ENV GIT_BRANCH=ckan-2.9.3
 
 RUN . /app/ckan/default/bin/activate \
 	&& cd /app/ckan/default/src/ \
