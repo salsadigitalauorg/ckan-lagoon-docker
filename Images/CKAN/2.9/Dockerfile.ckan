@@ -1,4 +1,4 @@
-FROM amazeeio/python:3.8
+FROM uselagoon/python-3.8
 
 RUN apk update \
     && apk upgrade \

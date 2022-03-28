@@ -1,4 +1,4 @@
-FROM amazeeio/python:2.7
+FROM uselagoon/python:2.7
 
 RUN apk update \
     && apk upgrade \

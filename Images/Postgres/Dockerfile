@@ -1,1 +1,1 @@
-FROM amazeeio/postgres-ckan
+FROM uselagoon/postgres-ckan
