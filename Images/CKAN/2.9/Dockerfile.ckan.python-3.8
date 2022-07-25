@@ -1,0 +1,87 @@
+FROM uselagoon/python-3.8
+
+# Internals, you probably don't need to change these
+ENV APP_DIR=/app
+ENV CKAN_DIR=$APP_DIR/ckan
+ENV SRC_DIR=$APP_DIR/src
+ENV CONFIG_DIR=$APP_DIR/config
+ENV CRONS_DIR=$APP_DIR/crons
+ENV CKAN_STORAGE_PATH=$APP_DIR/filestore
+ENV CKAN_VENV=$APP_DIR/venv
+ENV CKAN_INI=${CONFIG_DIR}/ckan.ini
+# ENV PIP_SRC=${SRC_DIR}
+
+ENV GIT_URL=https://github.com/ckan/ckan.git
+# CKAN version to build
+ENV GIT_BRANCH=ckan-2.9.5
+
+WORKDIR $APP_DIR
+
+# Install necessary packages to run CKAN
+RUN apk add --no-cache \
+        tzdata \
+        git \
+        gettext \
+        postgresql-client \
+        # python3 \
+        libxml2 \
+        libxslt \
+        musl-dev \
+        # uwsgi \
+        # uwsgi-http \
+        # uwsgi-corerouter \
+        # uwsgi-python \
+        # py3-gevent \
+        # uwsgi-gevent \
+        libmagic \
+        curl \
+        patch \
+        bash \
+        rsync && \
+    # Packages to build CKAN requirements and plugins
+    apk add --no-cache --virtual .build-deps \
+        postgresql-dev \
+        gcc \
+        make \
+        g++ \
+        autoconf \
+        automake \
+    	libtool \
+        # python3-dev \
+        libxml2-dev \
+        libxslt-dev \
+        linux-headers \
+        openssl-dev \
+        libffi-dev \
+        cargo
+
+# Create Directorys
+RUN mkdir -p $CKAN_DIR $CKAN_VENV $SRC_DIR $CONFIG_DIR $CRONS_DIR $CKAN_STORAGE_PATH
+
+# Set up Python3 virtual environment
+RUN python3 -m venv ${CKAN_VENV} && \
+    source ${CKAN_VENV}/bin/activate && \
+    pip3 install --upgrade pip
+
+# Install CKAN
+RUN source ${CKAN_VENV}/bin/activate && \
+    pip3 install -e git+${GIT_URL}@${GIT_BRANCH}#egg=ckan && \
+    cd ${CKAN_VENV}/src/ckan && \
+    cp who.ini ${CONFIG_DIR} && \
+    cp wsgi.py ${CKAN_DIR} && \
+    pip3 install -r requirement-setuptools.txt && \
+    pip3 install Werkzeug==2.1.2 && \
+    pip3 install --no-binary :all: -r requirements.txt && \
+    pip3 install uwsgi && \
+    # Install CKAN envvars to support loading config from environment variables
+    pip3 install git+https://github.com/okfn/ckanext-envvars.git#egg=ckanext-envvars
+
+# Create aliases
+RUN echo "alias activate='. ${CKAN_VENV}/bin/activate'" >> /home/.bashrc
+
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+CMD ["/bin/docker-sleep"]
