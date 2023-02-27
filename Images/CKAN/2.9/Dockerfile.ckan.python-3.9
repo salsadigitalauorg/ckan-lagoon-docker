@@ -1,4 +1,4 @@
-FROM uselagoon/python-3.9:22.10.0
+FROM uselagoon/python-3.9:23.2.0
 
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
 ARG PIP_NO_CACHE_DIR=1
@@ -10,14 +10,24 @@ ENV CONFIG_DIR=$APP_DIR/config
 ENV CRONS_DIR=$APP_DIR/crons
 ENV CKAN_STORAGE_PATH=$APP_DIR/filestore
 ENV CKAN_VENV=$APP_DIR/venv
+# We can replace activate by setting the environment variables
+ENV VIRTUAL_ENV=$CKAN_VENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV CKAN_INI=${CONFIG_DIR}/ckan.ini
-# ENV PIP_SRC=${SRC_DIR}
-
-ENV GIT_URL=https://github.com/ckan/ckan.git
+ENV PIP_SRC=${SRC_DIR}
 # CKAN version to build
-ENV GIT_BRANCH=ckan-2.9.7
+ENV GIT_URL=https://github.com/ckan/ckan.git
+ENV GIT_BRANCH=ckan-2.9.8
 
 WORKDIR $APP_DIR
+
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+# Create Directorys
+RUN mkdir -p $CKAN_DIR $CKAN_VENV $SRC_DIR $CONFIG_DIR $CRONS_DIR $CKAN_STORAGE_PATH
 
 # Install necessary packages to run CKAN
 RUN apk add --no-cache \
@@ -49,33 +59,25 @@ RUN apk add --no-cache \
         libffi-dev \
         cargo
 
-# Create Directorys
-RUN mkdir -p $CKAN_DIR $CKAN_VENV $SRC_DIR $CONFIG_DIR $CRONS_DIR $CKAN_STORAGE_PATH
-
-# Set up Python3 virtual environment
-RUN python3 -m venv ${CKAN_VENV} && \
-    source ${CKAN_VENV}/bin/activate && \
-    pip3 install --upgrade pip
+# Set up Python virtual environment
+RUN python -m venv ${CKAN_VENV} && \
+    pip install --upgrade pip && \
+    # Create aliases
+    echo "alias activate='. ${CKAN_VENV}/bin/activate'" >> /home/.bashrc
 
 # Install CKAN
-RUN source ${CKAN_VENV}/bin/activate && \
-    pip3 install -e git+${GIT_URL}@${GIT_BRANCH}#egg=ckan --config-settings editable_mode=strict && \
-    cd ${CKAN_VENV}/src/ckan && \
+RUN pip install -e git+${GIT_URL}@${GIT_BRANCH}#egg=ckan --config-settings editable_mode=strict && \
+    cd ${SRC_DIR}/ckan && \
     cp who.ini ${CONFIG_DIR} && \
     cp wsgi.py ${CKAN_DIR} && \
-    pip3 install -r requirement-setuptools.txt && \
-    pip3 install -r requirements.txt && \
-    pip3 install uwsgi && \
+    pip install -r requirement-setuptools.txt && \
+    pip install -r requirements.txt
+
+# Install dependencies
+RUN pip install uwsgi && \
+    pip install gevent && \
     # Install CKAN envvars to support loading config from environment variables
-    pip3 install -e git+https://github.com/okfn/ckanext-envvars.git#egg=ckanext-envvars
-
-# Create aliases
-RUN echo "alias activate='. ${CKAN_VENV}/bin/activate'" >> /home/.bashrc
-
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+    pip install -e git+https://github.com/okfn/ckanext-envvars.git#egg=ckanext-envvars
 
 # Apply any patches needed to CKAN core or any of the built extensions (not the
 # runtime mounted ones)
@@ -84,7 +86,7 @@ COPY patches ${APP_DIR}/patches
 RUN for d in $APP_DIR/patches/*; do \
         if [ -d $d ]; then \
             for f in `ls $d/*.patch | sort -g`; do \
-                cd ${CKAN_VENV}/src/`basename "$d"` && echo "$0: Applying patch $f to ${CKAN_VENV}/src/`basename $d`"; patch -p1 < "$f" ; \
+                cd ${SRC_DIR}/`basename "$d"` && echo "$0: Applying patch $f to ${SRC_DIR}/`basename $d`"; patch -p1 < "$f" ; \
             done ; \
         fi ; \
     done

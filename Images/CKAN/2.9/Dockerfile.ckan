@@ -1,4 +1,4 @@
-FROM uselagoon/python-3.8:22.10.0
+FROM uselagoon/python-3.8:23.2.0
 
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
 ARG PIP_NO_CACHE_DIR=1
@@ -31,7 +31,7 @@ RUN python3 -m venv /app/ckan/default \
 
 # Set CKAN version to build
 ENV GIT_URL=https://github.com/ckan/ckan.git
-ENV GIT_BRANCH=ckan-2.9.7
+ENV GIT_BRANCH=ckan-2.9.8
 
 RUN . /app/ckan/default/bin/activate \
 	&& cd /app/ckan/default/src/ \
