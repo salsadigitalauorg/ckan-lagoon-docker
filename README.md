@@ -25,3 +25,6 @@ docker buildx bake -f solr-8-bake.hcl --builder solr-2.9 --push
 
 docker buildx create --name solr-2.8 --platform linux/amd64,linux/arm64
 docker buildx bake -f solr-6-bake.hcl --builder solr-2.8 --push
+
+docker buildx create --name postgis --platform linux/amd64,linux/arm64
+docker buildx bake -f postgis-bake.hcl --builder postgis --push
