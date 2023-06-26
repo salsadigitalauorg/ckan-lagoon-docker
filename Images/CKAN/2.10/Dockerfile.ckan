@@ -1,0 +1,93 @@
+FROM uselagoon/python-3.10:23.5.0
+
+ARG PIP_DISABLE_PIP_VERSION_CHECK=1
+ARG PIP_NO_CACHE_DIR=1
+# Internals, you probably don't need to change these
+ENV APP_DIR=/app
+ENV CKAN_DIR=$APP_DIR/ckan
+ENV SRC_DIR=$APP_DIR/src
+ENV CONFIG_DIR=$APP_DIR/config
+ENV CRONS_DIR=$APP_DIR/crons
+ENV CKAN_STORAGE_PATH=$APP_DIR/filestore
+ENV CKAN_VENV=$APP_DIR/venv
+# We can replace activate by setting the environment variables
+ENV VIRTUAL_ENV=$CKAN_VENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV CKAN_INI=${CONFIG_DIR}/ckan.ini
+ENV PIP_SRC=${SRC_DIR}
+# CKAN version to build
+ENV CKAN_GIT_URL=https://github.com/ckan/ckan.git
+ENV CKAN_TAG=ckan-2.10.1
+ENV TZ=UTC
+
+WORKDIR $APP_DIR
+
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+# Create Directorys
+RUN mkdir -p $CKAN_DIR $CKAN_VENV $SRC_DIR $CONFIG_DIR $CRONS_DIR $CKAN_STORAGE_PATH
+
+# Install necessary packages to run CKAN
+RUN apk add --no-cache \
+        tzdata \
+        git \
+        gettext \
+        postgresql-client \
+        libxml2 \
+        libxslt \
+        musl-dev \
+        libmagic \
+        curl \
+        patch \
+        bash \
+        rsync \
+        libjpeg-turbo-dev && \
+    # Packages to build CKAN requirements and plugins
+    apk add --no-cache --virtual .build-deps \
+        postgresql-dev \
+        gcc \
+        make \
+        g++ \
+        autoconf \
+        automake \
+    	libtool \
+        libxml2-dev \
+        libxslt-dev \
+        linux-headers \
+        openssl-dev \
+        libffi-dev \
+        cargo
+
+# Set up Python virtual environment
+RUN python -m venv ${CKAN_VENV} && \
+    pip install --upgrade pip
+
+# Install CKAN
+RUN pip install -e git+${CKAN_GIT_URL}@${CKAN_TAG}#egg=ckan && \
+    cd ${SRC_DIR}/ckan && \
+    cp who.ini ${CONFIG_DIR} && \
+    cp wsgi.py ${CKAN_DIR} && \
+    pip install -r requirements.txt && \
+    ckan generate config ${CKAN_INI}
+
+# Install dependencies
+RUN pip install uwsgi gevent && \
+    # Install CKAN envvars to support loading config from environment variables
+    pip install -e git+https://github.com/okfn/ckanext-envvars.git#egg=ckanext-envvars
+
+# Apply any patches needed to CKAN core or any of the built extensions (not the
+# runtime mounted ones)
+COPY patches ${APP_DIR}/patches
+
+RUN for d in $APP_DIR/patches/*; do \
+        if [ -d $d ]; then \
+            for f in `ls $d/*.patch | sort -g`; do \
+                cd ${SRC_DIR}/`basename "$d"` && echo "$0: Applying patch $f to ${SRC_DIR}/`basename $d`"; patch -p1 < "$f" ; \
+            done ; \
+        fi ; \
+    done
+
+CMD ["/bin/docker-sleep"]

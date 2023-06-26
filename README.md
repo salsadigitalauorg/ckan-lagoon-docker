@@ -14,6 +14,9 @@ target "cli" {
     tags = ["salsadigitalau/ckan-2.9:2.9.5"]
 }
 ```
+docker buildx create --name ckan-2.10 --platform linux/amd64,linux/arm64
+docker buildx bake -f ckan-2.10-bake.hcl --builder ckan-2.10 --push
+
 docker buildx create --name ckan-2.9 --platform linux/amd64,linux/arm64    
 docker buildx bake -f ckan-2.9-bake.hcl --builder ckan-2.9 --push
 
