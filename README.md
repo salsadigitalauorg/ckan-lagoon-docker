@@ -1,5 +1,5 @@
-# ckan_docker
-A place to store base ckan docker images
+# ckan-lagoon-docker
+A place to store base ckan docker images for Lagoon projects
 
 
 Next we need a bake config that defines configuration, targets, platforms. Example for a single image a file named bake.hcl:
