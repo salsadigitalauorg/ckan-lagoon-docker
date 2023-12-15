@@ -1,6 +1,8 @@
-FROM uselagoon/solr-8:23.5.0
+ARG LAGOON_VERSION
+FROM uselagoon/solr-8:$LAGOON_VERSION
 
-ARG CKAN_BRANCH="ckan-2.10.1"
+ARG CKAN_VERSION
+ENV CKAN_BRANCH="ckan-${CKAN_VERSION}"
 
 ENV SOLR_CONFIG_DIR="/opt/solr/server/solr/configsets"
 ENV SOLR_SCHEMA_FILE="$SOLR_CONFIG_DIR/ckan/conf/managed-schema"

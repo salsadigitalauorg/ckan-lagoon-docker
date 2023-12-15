@@ -1,7 +1,9 @@
-FROM uselagoon/python-3.9:23.5.0
+ARG LAGOON_VERSION
+FROM uselagoon/python-3.9:$LAGOON_VERSION
 
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
 ARG PIP_NO_CACHE_DIR=1
+ARG CKAN_VERSION
 # Internals, you probably don't need to change these
 ENV APP_DIR=/app
 ENV CKAN_DIR=$APP_DIR/ckan
@@ -17,7 +19,8 @@ ENV CKAN_INI=${CONFIG_DIR}/ckan.ini
 ENV PIP_SRC=${SRC_DIR}
 # CKAN version to build
 ENV CKAN_GIT_URL=https://github.com/ckan/ckan.git
-ENV CKAN_TAG=ckan-2.9.9
+ENV CKAN_TAG=ckan-${CKAN_VERSION}
+ENV TZ=UTC
 
 WORKDIR $APP_DIR
 
@@ -43,7 +46,8 @@ RUN apk add --no-cache \
         patch \
         bash \
         rsync \
-        libjpeg-turbo-dev && \
+        libjpeg-turbo-dev \
+        openssh-client && \
     # Packages to build CKAN requirements and plugins
     apk add --no-cache --virtual .build-deps \
         postgresql-dev \
@@ -62,15 +66,21 @@ RUN apk add --no-cache \
 
 # Set up Python virtual environment
 RUN python -m venv ${CKAN_VENV} && \
-    pip install --upgrade pip && \
-    # Create aliases
-    echo "alias activate='. ${CKAN_VENV}/bin/activate'" >> /home/.bashrc
+    pip install --upgrade pip
 
 # Install CKAN
-RUN pip install -e git+${CKAN_GIT_URL}@${CKAN_TAG}#egg=ckan --config-settings editable_mode=strict && \
+RUN pip install -e git+${CKAN_GIT_URL}@${CKAN_TAG}#egg=ckan && \
     cd ${SRC_DIR}/ckan && \
     cp who.ini ${CONFIG_DIR} && \
     cp wsgi.py ${CKAN_DIR} && \
+    # Workaround, can be removed when 2.10.2 is released
+    # https://github.com/ckan/ckan/pull/7864
+    #sed -i 's/pyyaml==6.0/pyyaml==6.0.1/' requirements.txt && \
+    # begin workaround
+    sed -i '/pyyaml==5.4.1/d' requirements.txt && \
+    echo 'Cython < 3.0' > /tmp/constraint.txt && \
+    PIP_CONSTRAINT=/tmp/constraint.txt pip install PyYAML==5.4.1 && \
+    # end workaround
     pip install -r requirement-setuptools.txt && \
     # Currently, CKAN 2.9 pins to zope.interface==4.3.2 which fails to install in pip, upgrading to 5.4.0 from CKAN 2.10
     sed -i 's/zope\.interface==4\.3\.2/zope.interface==5.4.0/g' requirements.txt && \
