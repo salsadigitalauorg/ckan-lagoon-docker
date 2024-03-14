@@ -73,9 +73,9 @@ RUN pip install -e git+${CKAN_GIT_URL}@${CKAN_TAG}#egg=ckan && \
     cd ${SRC_DIR}/ckan && \
     cp who.ini ${CONFIG_DIR} && \
     cp wsgi.py ${CKAN_DIR} && \
-    # Workaround, can be removed when 2.10.2 is released
+    # Currently, CKAN 2.9 pins to pyyaml 5.4.1 which fails to install in pip
     # https://github.com/ckan/ckan/pull/7864
-    #sed -i 's/pyyaml==6.0/pyyaml==6.0.1/' requirements.txt && \
+    # https://github.com/yaml/pyyaml/pull/702
     # begin workaround
     sed -i '/pyyaml==5.4.1/d' requirements.txt && \
     echo 'Cython < 3.0' > /tmp/constraint.txt && \
