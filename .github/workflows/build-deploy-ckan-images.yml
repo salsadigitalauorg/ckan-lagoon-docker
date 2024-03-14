@@ -1,0 +1,110 @@
+name: Build & Deploy CKAN Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      ckan_2_9_version:
+        type: string
+      ckan_2_10_version:
+        type: string
+      lagoon_version:
+        type: string
+        default: latest
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push-ckan-2_9:
+    if: github.event.inputs.ckan_2_9_version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push CKAN Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: ./Images/CKAN/2.9/Dockerfile.ckan
+          context: ./Images/CKAN/2.9
+          build-args: |
+            CKAN_VERSION=${{ inputs.ckan_2_9_version}}
+            LAGOON_VERSION=${{ inputs.lagoon_version}}
+          platforms: linux/amd64, linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-2.9:${{ inputs.ckan_2_9_version}}
+
+      - name: Build and push CKAN Solr Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: ./Images/Solr/8/Dockerfile.solr.ckan-2.9
+          context: ./Images/Solr
+          build-args: |
+            CKAN_VERSION=${{ inputs.ckan_2_9_version}}
+            LAGOON_VERSION=${{ inputs.lagoon_version}}
+          platforms: linux/amd64, linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-solr-8:${{ inputs.ckan_2_9_version}}
+
+  build-and-push-ckan-2_10:
+    if: github.event.inputs.ckan_2_10_version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push CKAN Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: ./Images/CKAN/2.10/Dockerfile.ckan
+          context: ./Images/CKAN/2.10
+          build-args: |
+            CKAN_VERSION=${{ inputs.ckan_2_10_version}}
+            LAGOON_VERSION=${{ inputs.lagoon_version}}
+          platforms: linux/amd64, linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-2.10:${{ inputs.ckan_2_10_version}}
+
+      - name: Build and push CKAN Solr Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: ./Images/Solr/8/Dockerfile.solr.ckan-2.10
+          context: ./Images/Solr
+          build-args: |
+            CKAN_VERSION=${{ inputs.ckan_2_10_version}}
+            LAGOON_VERSION=${{ inputs.lagoon_version}}
+          platforms: linux/amd64, linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-solr-8:${{ inputs.ckan_2_10_version}}
