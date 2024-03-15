@@ -48,7 +48,7 @@ jobs:
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-2.9:${{ inputs.ckan_2_9_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-2.9:${{ inputs.ckan_2_9_version}}
 
       - name: Build and push CKAN Solr Docker image
         uses: docker/build-push-action@v5
@@ -60,7 +60,7 @@ jobs:
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-solr-8:${{ inputs.ckan_2_9_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-solr-8:${{ inputs.ckan_2_9_version}}
 
   build-and-push-ckan-2_10:
     if: github.event.inputs.ckan_2_10_version != ''
@@ -95,7 +95,7 @@ jobs:
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-2.10:${{ inputs.ckan_2_10_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-2.10:${{ inputs.ckan_2_10_version}}
 
       - name: Build and push CKAN Solr Docker image
         uses: docker/build-push-action@v5
@@ -107,4 +107,4 @@ jobs:
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/ckan-solr-8:${{ inputs.ckan_2_10_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-solr-8:${{ inputs.ckan_2_10_version}}
