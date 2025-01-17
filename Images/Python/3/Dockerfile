@@ -1,2 +1,0 @@
-ARG PYTHON_VERSION
-FROM uselagoon/python:${PYTHON_VERSION:-3.7}
