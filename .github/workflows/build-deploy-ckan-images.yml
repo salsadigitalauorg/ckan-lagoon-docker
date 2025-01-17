@@ -3,7 +3,7 @@ name: Build & Deploy CKAN Images
 on:
   workflow_dispatch:
     inputs:
-      ckan_2_9_version:
+      ckan_2_11_version:
         type: string
       ckan_2_10_version:
         type: string
@@ -15,8 +15,8 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  build-and-push-ckan-2_9:
-    if: github.event.inputs.ckan_2_9_version != ''
+  build-and-push-ckan-2_11:
+    if: github.event.inputs.ckan_2_11_version != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -41,26 +41,26 @@ jobs:
       - name: Build and push CKAN Docker image
         uses: docker/build-push-action@v5
         with:
-          file: ./Images/CKAN/2.9/Dockerfile.ckan
-          context: ./Images/CKAN/2.9
+          file: ./Images/CKAN/2.11/Dockerfile.ckan
+          context: ./Images/CKAN/2.11
           build-args: |
-            CKAN_VERSION=${{ inputs.ckan_2_9_version}}
+            CKAN_VERSION=${{ inputs.ckan_2_11_version}}
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-2.9:${{ inputs.ckan_2_9_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-2.11:${{ inputs.ckan_11_version}}
 
       - name: Build and push CKAN Solr Docker image
         uses: docker/build-push-action@v5
         with:
-          file: ./Images/Solr/8/Dockerfile.solr.ckan-2.9
+          file: ./Images/Solr/8/Dockerfile.solr.ckan-2.11
           context: ./Images/Solr
           build-args: |
-            CKAN_VERSION=${{ inputs.ckan_2_9_version}}
+            CKAN_VERSION=${{ inputs.ckan_2_11_version}}
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-solr-8:${{ inputs.ckan_2_9_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-solr-9:${{ inputs.ckan_2_11_version}}
 
   build-and-push-ckan-2_10:
     if: github.event.inputs.ckan_2_10_version != ''
