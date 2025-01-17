@@ -48,7 +48,7 @@ jobs:
             LAGOON_VERSION=${{ inputs.lagoon_version}}
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-2.11:${{ inputs.ckan_11_version}}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ckan-2.11:${{ inputs.ckan_2_11_version}}
 
       - name: Build and push CKAN Solr Docker image
         uses: docker/build-push-action@v5
