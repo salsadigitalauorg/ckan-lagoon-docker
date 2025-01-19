@@ -53,7 +53,7 @@ jobs:
       - name: Build and push CKAN Solr Docker image
         uses: docker/build-push-action@v5
         with:
-          file: ./Images/Solr/8/Dockerfile.solr.ckan-2.11
+          file: ./Images/Solr/9/Dockerfile.solr.ckan-2.11
           context: ./Images/Solr
           build-args: |
             CKAN_VERSION=${{ inputs.ckan_2_11_version}}
