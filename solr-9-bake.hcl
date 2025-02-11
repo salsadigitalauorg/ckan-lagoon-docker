@@ -11,7 +11,7 @@ group "default" {
 }
 
 target "ckan-2-11" {
-    dockerfile = "Images/Solr/8/Dockerfile.solr.ckan-2.11"
+    dockerfile = "Images/Solr/9/Dockerfile.solr.ckan-2.11"
     platforms = ["linux/amd64", "linux/arm64"]
     tags = ["ghcr.io/salsadigitalauorg/ckan-solr-9:${CKAN_2_11_VERSION}"]
     args = {
