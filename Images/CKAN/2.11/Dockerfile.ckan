@@ -78,7 +78,7 @@ RUN pip install -e git+${CKAN_GIT_URL}@${CKAN_TAG}#egg=ckan && \
 # Install dependencies
 RUN pip install uwsgi && \
     # Install CKAN envvars to support loading config from environment variables
-    pip install -e git+https://github.com/okfn/ckanext-envvars.git#egg=ckanext-envvars
+    pip install -e git+https://github.com/okfn/ckanext-envvars.git@v0.0.6#egg=ckanext-envvars
 
 # Apply any patches needed to CKAN core or any of the built extensions (not the
 # runtime mounted ones)
