@@ -24,10 +24,19 @@ ENV TZ=UTC
 
 WORKDIR $APP_DIR
 
+ARG TARGETARCH
 ENV DOCKERIZE_VERSION v0.9.8
+# jwilder/dockerize only ships an "alpine" asset for amd64; arm64 has no
+# alpine-labelled build, but the plain linux-arm64 binary is statically
+# linked so it still runs on this musl-based image.
 RUN apk update --no-cache \
     && apk add --no-cache wget openssl \
-    && wget -O - https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz | tar xzf - -C /usr/local/bin \
+    && case "$TARGETARCH" in \
+        amd64) DOCKERIZE_ARCH=alpine-linux-amd64 ;; \
+        arm64) DOCKERIZE_ARCH=linux-arm64 ;; \
+        *) echo "Unsupported TARGETARCH: $TARGETARCH" && exit 1 ;; \
+       esac \
+    && wget -O - https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-${DOCKERIZE_ARCH}-$DOCKERIZE_VERSION.tar.gz | tar xzf - -C /usr/local/bin \
     && apk del wget
 
 # Create Directories
