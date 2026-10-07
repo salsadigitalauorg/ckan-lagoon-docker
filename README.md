@@ -17,10 +17,18 @@ echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
 ### Create, build, push images Github Container Registry
 #### Update the .env.bake file and set the CKAN and lagoon versions
     # CKAN Tags: https://github.com/ckan/ckan/tags
-    CKAN_2_11_VERSION="2.11.1"
-    CKAN_2_10_VERSION="2.10.6"
+    CKAN_2_12_VERSION="2.12.0"
+    CKAN_2_11_VERSION="2.11.6"
+    CKAN_2_10_VERSION="2.10.11"
     # Lagoon Image Tags: https://github.com/uselagoon/lagoon-images/tags
-    LAGOON_VERSION="24.12.0"
+    LAGOON_VERSION="26.9.0"
+
+### CKAN 2.12
+#### Build for testing locally
+    source .env.bake && docker build --pull --rm -f "Images/CKAN/2.12/Dockerfile.ckan" -t ghcr.io/salsadigitalauorg/ckan-2.12:$CKAN_2_12_VERSION "Images/CKAN/2.12" --build-arg CKAN_VERSION="$CKAN_2_12_VERSION" --build-arg LAGOON_VERSION="$LAGOON_VERSION"
+#### Build and Push to ghcr
+    docker buildx create --name ckan-2.12 --platform linux/amd64,linux/arm64 (Just the first time to create builder)
+    docker buildx bake -f ckan-2.12-bake.hcl -f .env.bake --builder ckan-2.12 --push
 
 ### CKAN 2.11
 #### Build for testing locally
@@ -38,11 +46,17 @@ echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
 
 
 ### CKAN Solr 9
+Solr 9 serves both CKAN 2.12 and 2.11. Both push to the same `ckan-solr-9` image and are
+distinguished by tag, so build the target that matches your CKAN version.
 #### Build for testing locally
+    # CKAN 2.12
+    source .env.bake && docker build --pull --rm -f "Images/Solr/9/Dockerfile.solr.ckan-2.12" -t "ghcr.io/salsadigitalauorg/ckan-solr-9:$CKAN_2_12_VERSION" "Images/Solr" --build-arg CKAN_VERSION="$CKAN_2_12_VERSION" --build-arg LAGOON_VERSION="$LAGOON_VERSION"
+    # CKAN 2.11
     source .env.bake && docker build --pull --rm -f "Images/Solr/9/Dockerfile.solr.ckan-2.11" -t "ghcr.io/salsadigitalauorg/ckan-solr-9:$CKAN_2_11_VERSION" "Images/Solr" --build-arg CKAN_VERSION="$CKAN_2_11_VERSION" --build-arg LAGOON_VERSION="$LAGOON_VERSION"
 #### Build and Push to ghcr
     docker buildx create --name solr-9 --platform linux/amd64,linux/arm64 (Just the first time to create builder)
-    docker buildx bake -f solr-9-bake.hcl -f .env.bake --builder solr-9 --push
+    docker buildx bake -f solr-9-bake.hcl -f .env.bake --builder solr-9 --push            # builds CKAN 2.12 (default group)
+    docker buildx bake -f solr-9-bake.hcl -f .env.bake --builder solr-9 ckan-2-11 --push  # builds CKAN 2.11
 
 ### CKAN Solr 8
 #### Build for testing locally
